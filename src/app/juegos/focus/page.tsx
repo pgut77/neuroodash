@@ -38,7 +38,7 @@ export default function CalculoRapido() {
   const router = useRouter();
 
   const handleSalir = () => {
-    router.push("/") // redirige al inicio
+    router.push("/juegos") // redirige al inicio
   }
 
   useEffect(() => {

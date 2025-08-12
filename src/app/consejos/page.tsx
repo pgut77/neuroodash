@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { collection, addDoc, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 
 interface Consejo {
   texto: string
@@ -12,6 +14,8 @@ interface Consejo {
 const estados = ['motivado', 'estresado', 'triste', 'desenfocado', 'feliz', 'ansioso']
 
 export default function Consejos() {
+  const router = useRouter()
+
   const [consejos, setConsejos] = useState<Consejo[]>([])
   const [nuevoConsejo, setNuevoConsejo] = useState('')
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('motivado')
@@ -48,8 +52,23 @@ export default function Consejos() {
 
   const consejosFiltrados = consejos.filter(c => c.estado === filtro)
 
+  // Función para salir / ir a home o página que desees
+  function handleSalir() {
+    router.push('/') // Cambia la ruta si quieres otro destino
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
+      
+      {/* Botón Salir */}
+      <button
+        onClick={() => router.push('/')} 
+        className="flex items-center mb-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition"
+      >
+        <LogOut className="w-5 h-5 mr-2" />
+        Salir
+      </button>
+
       <h1 className="text-3xl font-bold mb-6 text-center">🌟 Consejos por Estado de Ánimo</h1>
 
       {/* Formulario */}

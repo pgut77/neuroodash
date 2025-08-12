@@ -130,6 +130,7 @@ export default function GestorMaterias() {
           <input
             type="color"
             value={form.color}
+            
             onChange={(e) => setForm({ ...form, color: e.target.value })}
             className="w-full h-10 rounded border border-gray-300 cursor-pointer"
           />

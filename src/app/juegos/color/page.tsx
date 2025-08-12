@@ -110,7 +110,7 @@ export default function ColorFinder() {
 
       {/* Botón salir flotante */}
       <button
-        onClick={handleSalir}
+        onClick={() => router.push('/juegos')} 
         className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-full shadow-lg transition flex items-center gap-2"
       >
         ⏻ Salir

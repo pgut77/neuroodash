@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Gamepad2, Brain, Palette, Calculator } from 'lucide-react'
+import { Gamepad2, Brain, Palette, Calculator, LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const games = [
   {
@@ -32,8 +33,26 @@ const games = [
 ]
 
 export default function GamesPage() {
+  const router = useRouter()
+
+  function handleLogout() {
+    // Aquí defines qué hace salir, por ejemplo volver a la home
+    router.push('/')
+    // O router.back() para ir a la página anterior
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-purple-100 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
+      
+      {/* Botón Salir */}
+      <button
+        onClick={handleLogout}
+        className="flex items-center mb-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition"
+      >
+        <LogOut className="w-5 h-5 mr-2" />
+        Salir
+      </button>
+
       <h1 className="text-4xl font-bold text-center mb-10">🧠 Minijuegos Mentales</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {games.map((game, i) => (
