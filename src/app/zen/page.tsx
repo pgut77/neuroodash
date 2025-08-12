@@ -6,7 +6,7 @@ import { Pause, Play, LogOut, CloudRain, Trees, Waves } from 'lucide-react'
 
 // Sonidos y GIFs asociados
 const sonidos = {
-  lluvia: { src: '/sounds/lluvia.mp3', gif: '/images/lluvia.gif' },
+  lluvia: { src: '/sounds/relax.mp3', gif: '/images/lluvia.gif' },
   bosque: { src: '/sounds/night.mp3', gif: '/images/night.gif' },
   olas: { src: '/sounds/sleep.mp3', gif: '/images/sleep.gif' },
 }
@@ -100,7 +100,7 @@ export default function ModoZen() {
       <div className="flex gap-4 mb-6 z-10">
         <button onClick={() => reproducirSonido('lluvia')}
           className="px-4 py-2 bg-blue-200 rounded-xl hover:bg-blue-300 flex items-center gap-2">
-          <CloudRain size={20}/> Lluvia
+          <CloudRain size={20}/> Relax
         </button>
         <button onClick={() => reproducirSonido('bosque')}
           className="px-4 py-2 bg-green-200 rounded-xl hover:bg-green-300 flex items-center gap-2">
