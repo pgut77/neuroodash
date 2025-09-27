@@ -59,13 +59,7 @@ export default function ModoZen() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #ffffff, #dbeafe)',
-        transition: 'background 1s ease'
-      }}
-    >
+   <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       {/* Partículas flotando */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (

@@ -98,7 +98,7 @@ export default function ListaTareas() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto text-gray-900 dark:text-white">
+   <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       {/* Encabezado */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold">📋 Lista de Tareas</h1>

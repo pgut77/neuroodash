@@ -47,6 +47,24 @@ const sections = [
     icon: <BookOpenIcon className="w-6 h-6 text-yellow-500" />,
     href: '/materias',
   },
+  {
+    title: 'Calendario',
+    description: 'Organizate a tu manera.',
+    icon: <BookOpenIcon className="w-6 h-6 text-yellow-500" />,
+    href: '/calendario',
+  },
+  {
+    title: 'Rutina',
+    description: 'Organiza tu rutina diaria.',
+    icon: <BookOpenIcon className="w-6 h-6 text-purple-500" />,
+    href: '/rutina',
+  },
+  {
+    title: 'Diario',
+    description: 'Lleva un registro de tus emociones y pensamientos.',
+    icon: <BookOpenIcon className="w-6 h-6 text-purple-500" />,
+    href: '/emociones',
+  },
 ]
 
 export default function Dashboard() {

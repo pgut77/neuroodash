@@ -87,7 +87,7 @@ export default function GestorMaterias() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       {/* Encabezado */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function GestorMaterias() {
       </div>
 
       {/* Formulario */}
-      <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-md">
+      <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-md">
         <h2 className="text-xl font-semibold mb-4">Agregar nueva materia</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input

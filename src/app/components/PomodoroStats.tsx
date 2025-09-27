@@ -16,7 +16,7 @@ const data = [
 
 export default function PomodoroStats() {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md w-full max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       <h2 className="text-xl font-bold mb-4 text-center dark:text-white">📊 Ciclos por Día</h2>
 
       <ResponsiveContainer width="100%" height={300}>

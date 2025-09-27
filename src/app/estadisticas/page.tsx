@@ -13,7 +13,7 @@ export default function EstadisticasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       <h1 className="text-2xl font-bold mb-4">📊 Estadísticas</h1>
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <StatCard label="Pomodoros Completados" value="12" />
