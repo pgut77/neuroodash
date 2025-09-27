@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import  RoutineModal  from './RoutineModal'
 import { useRouter } from 'next/navigation'
 import { db } from '../lib/firebase'
 import {
