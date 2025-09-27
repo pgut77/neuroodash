@@ -1,40 +1,30 @@
-name: Deploy Continuo
+name: Deploy Next.js to Vercel
 
 on:
   push:
     branches:
-      - main   # Se activa al hacer push a la rama principal
+      - main  # Se ejecuta cuando haces push a main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Configurar Node.js (ejemplo para apps Node)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 20
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: npm install
 
-      - name: Ejecutar pruebas
-        run: npm test
-
-      - name: Construir aplicación
+      - name: Build project
         run: npm run build
 
-      - name: Desplegar en servidor (ejemplo con SSH)
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/tu-app
-            git pull origin main
-            npm install --production
-            pm2 restart app
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel --prod --token $VERCEL_TOKEN --confirm
