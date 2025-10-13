@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import  RoutineModal  from './RoutineModal'
+import RoutineModal from './RoutineModal'
 import { useRouter } from 'next/navigation'
 import { db } from '../lib/firebase'
 import {
   addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, Timestamp, updateDoc
 } from 'firebase/firestore'
-import { Plus, PencilLine, Trash2, CheckSquare, RefreshCcw, X } from 'lucide-react'
+import { Plus, PencilLine, Trash2, CheckSquare, RefreshCcw } from 'lucide-react'
 
 type Periodo = 'Mañana' | 'Tarde' | 'Noche'
 type TaskItem = { id: string; text: string; done: boolean }
@@ -80,19 +80,30 @@ export default function RoutinesPage() {
   }
 
   return (
-   <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
+    <div
+      className="
+      min-h-screen
+      bg-gradient-to-br
+      from-white via-indigo-50 to-blue-100
+      dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
+      text-gray-900 dark:text-white
+      transition-colors duration-500
+      p-6"
+    >
       <div className="mx-auto max-w-6xl flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Rutinas personalizadas</h1>
+        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">
+          Rutinas Personalizadas
+        </h1>
         <div className="flex gap-3">
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold text-white shadow-md"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 font-semibold text-white shadow-lg transition"
           >
             <Plus size={18} /> Nueva rutina
           </button>
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold shadow-md"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 hover:opacity-90 text-white font-semibold shadow-lg transition"
           >
             Salir
           </button>
@@ -103,8 +114,7 @@ export default function RoutinesPage() {
         {PERIODS.map(period => (
           <div
             key={period}
-            className="rounded-2xl overflow-hidden shadow-lg
-              bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border border-neutral-300 dark:border-neutral-700"
+            className="rounded-2xl overflow-hidden shadow-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 transition-colors duration-500"
           >
             <div className={`px-4 py-3 bg-gradient-to-r ${PERIOD_COLORS[period]} text-white font-semibold`}>
               {period}
@@ -112,7 +122,7 @@ export default function RoutinesPage() {
 
             <div className="p-4 space-y-4">
               {grouped[period].length === 0 && (
-                <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm italic">
                   Sin rutinas en {period.toLowerCase()}…
                 </p>
               )}
@@ -120,10 +130,10 @@ export default function RoutinesPage() {
               {grouped[period].map(r => (
                 <div
                   key={r.id}
-                  className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md"
+                  className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md transition-all duration-300 hover:scale-[1.02]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-semibold">{r.title}</h3>
+                    <h3 className="font-semibold text-lg">{r.title}</h3>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => openEdit(r)}

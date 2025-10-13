@@ -37,7 +37,6 @@ export default function GestorMaterias() {
   const router = useRouter()
 
   const handleSalir = () => {
-    // Puedes limpiar datos aquí si es necesario
     router.push('/')
   }
 
@@ -87,16 +86,17 @@ export default function GestorMaterias() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 p-6 transition-colors duration-500">
+
       {/* Encabezado */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <Book className="w-7 h-7 text-blue-600" />
+          <Book className="w-7 h-7 text-blue-500" />
           <h1 className="text-3xl font-bold">Gestor de Materias</h1>
         </div>
         <button
           onClick={handleSalir}
-          className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+          className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
         >
           <LogOut size={18} />
           Salir
@@ -104,40 +104,42 @@ export default function GestorMaterias() {
       </div>
 
       {/* Fecha y hora */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-100 to-purple-200 rounded-lg px-4 py-3 shadow">
-        <div className="text-md text-gray-700 font-medium">{fecha}</div>
-        <div className="text-xl font-bold text-gray-800">{hora}</div>
+      <div className="flex items-center justify-between bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 rounded-lg px-4 py-3 shadow-sm transition-colors duration-500">
+        <div className="text-md font-medium text-gray-700 dark:text-gray-300">{fecha}</div>
+        <div className="text-xl font-bold text-gray-800 dark:text-gray-200">{hora}</div>
       </div>
 
       {/* Formulario */}
-      <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Agregar nueva materia</h2>
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 rounded-xl shadow-md mt-5 transition-colors duration-500">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+          Agregar nueva materia
+        </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
             placeholder="Nombre de la materia"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="p-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400"
+            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
           />
           <input
             type="text"
             placeholder="Nombre del profesor"
             value={form.teacher}
             onChange={(e) => setForm({ ...form, teacher: e.target.value })}
-            className="p-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400"
+            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
           />
           <input
             type="color"
             value={form.color}
-            
             onChange={(e) => setForm({ ...form, color: e.target.value })}
-            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+            className="w-full h-10 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
           />
           <select
             value={form.day}
             onChange={(e) => setForm({ ...form, day: e.target.value })}
-            className="p-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400"
+            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
           >
             <option value="">Día de la semana</option>
             <option value="Lunes">Lunes</option>
@@ -152,25 +154,29 @@ export default function GestorMaterias() {
             type="time"
             value={form.time}
             onChange={(e) => setForm({ ...form, time: e.target.value })}
-            className="p-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400"
+            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
           />
         </div>
+
         <button
           onClick={handleAdd}
           disabled={loading}
-          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white transition"
+          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition"
         >
           <Plus className="inline-block mr-2" /> Agregar
         </button>
       </div>
 
       {/* Lista de materias */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         {materias.map((mat) => (
           <div
             key={mat.id}
-            className="rounded-xl shadow-md p-4 relative text-white"
-            style={{ backgroundColor: mat.color }}
+            className="rounded-xl shadow-md p-4 relative text-white transition"
+            style={{
+              backgroundColor: mat.color,
+              filter: 'brightness(0.95)',
+            }}
           >
             <h3 className="text-xl font-bold mb-1">{mat.name}</h3>
             <p className="text-sm">Profesor: {mat.teacher}</p>

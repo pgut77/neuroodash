@@ -1,4 +1,5 @@
 import './globals.css'
+import Mascota3D from './components/Mascota3D'
 
 export const metadata = {
   title: 'NeuroDashboard',
@@ -13,6 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <section className="w-full h-full overflow-y-auto">
             {children}
           </section>
+            <>
+      {children}
+      <Mascota3D />
+    </>
         </main>
       </body>
     </html>
