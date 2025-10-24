@@ -6,12 +6,6 @@ import Link from 'next/link'
 
 const sections = [
   {
-    title: 'Pomodoro',
-    description: 'Enfócate con sesiones temporizadas.',
-    icon: <TimerIcon className="w-6 h-6 text-red-500" />,
-    href: '/pomodoro',
-  },
-  {
     title: 'Juegos Mentales',
     description: 'Entrena tu mente diariamente.',
     icon: <BrainIcon className="w-6 h-6 text-indigo-500" />,
@@ -30,7 +24,7 @@ const sections = [
     href: '/estadisticas',
   },
   {
-    title: 'Modo Zen',
+    title: 'Pomodoro Zen',
     description: 'Relájate y respira.',
     icon: <LeafIcon className="w-6 h-6 text-emerald-500" />,
     href: '/zen',
