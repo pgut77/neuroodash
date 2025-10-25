@@ -75,7 +75,7 @@ export default function LoginPage() {
     >
       <div
         className="rounded-2xl shadow-lg w-80 sm:w-96 p-6"
-        style={{ backgroundColor: '#fff8e7', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+        style={{ backgroundColor: '#ffffff', boxShadow: '0 6px 20px rgba(0,0,0,0.1)' }}
       >
         <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">
           {isRegister ? 'Crear cuenta' : 'Iniciar sesión'}
