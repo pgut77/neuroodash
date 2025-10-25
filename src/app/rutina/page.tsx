@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import RoutineModal from './RoutineModal'
 import { useRouter } from 'next/navigation'
-import { db } from '../lib/firebase'
+import { db, auth } from '../lib/firebase'
 import {
-  addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, Timestamp, updateDoc
+  addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, Timestamp, updateDoc, query
 } from 'firebase/firestore'
+import { onAuthStateChanged, User } from 'firebase/auth'
 import { Plus, PencilLine, Trash2, CheckSquare, RefreshCcw } from 'lucide-react'
 
 type Periodo = 'Mañana' | 'Tarde' | 'Noche'
@@ -30,10 +31,19 @@ export default function RoutinesPage() {
   const [routines, setRoutines] = useState<Routine[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Routine | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const router = useRouter()
 
+  // Detectar usuario autenticado
   useEffect(() => {
-    const ref = collection(db, 'routines')
+    const unsubAuth = onAuthStateChanged(auth, currentUser => setUser(currentUser))
+    return () => unsubAuth()
+  }, [])
+
+  // Obtener rutinas del usuario
+  useEffect(() => {
+    if (!user?.uid) return
+    const ref = collection(db, 'users', user.uid, 'routines')
     const q = query(ref, orderBy('createdAt', 'asc'))
     const unsub = onSnapshot(q, snap => {
       const list: Routine[] = []
@@ -41,7 +51,7 @@ export default function RoutinesPage() {
       setRoutines(list)
     })
     return () => unsub()
-  }, [])
+  }, [user])
 
   const grouped = useMemo(() => {
     return PERIODS.reduce((acc, p) => {
@@ -55,41 +65,39 @@ export default function RoutinesPage() {
   const closeModal = () => { setEditing(null); setModalOpen(false) }
 
   const saveRoutine = async (payload: Omit<Routine, 'id' | 'createdAt'>) => {
-    if (editing?.id) {
-      await updateDoc(doc(db, 'routines', editing.id), { ...payload })
-    } else {
-      await addDoc(collection(db, 'routines'), { ...payload, createdAt: Timestamp.now() })
+    if (!user?.uid) return
+    try {
+      if (editing?.id) {
+        await updateDoc(doc(db, 'users', user.uid, 'routines', editing.id), { ...payload })
+      } else {
+        await addDoc(collection(db, 'users', user.uid, 'routines'), { ...payload, createdAt: Timestamp.now() })
+      }
+      closeModal()
+    } catch (err) {
+      console.error('Error guardando rutina:', err)
     }
-    closeModal()
   }
 
   const deleteRoutine = async (id: string) => {
-    await deleteDoc(doc(db, 'routines', id))
+    if (!user?.uid) return
+    if (!confirm('¿Seguro que quieres eliminar esta rutina?')) return
+    await deleteDoc(doc(db, 'users', user.uid, 'routines', id))
   }
 
   const toggleTask = async (routine: Routine, taskId: string) => {
-    if (!routine.id) return
+    if (!user?.uid || !routine.id) return
     const tasks = routine.tasks.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
-    await updateDoc(doc(db, 'routines', routine.id), { tasks })
+    await updateDoc(doc(db, 'users', user.uid, 'routines', routine.id), { tasks })
   }
 
   const markAll = async (routine: Routine, value: boolean) => {
-    if (!routine.id) return
+    if (!user?.uid || !routine.id) return
     const tasks = routine.tasks.map(t => ({ ...t, done: value }))
-    await updateDoc(doc(db, 'routines', routine.id), { tasks })
+    await updateDoc(doc(db, 'users', user.uid, 'routines', routine.id), { tasks })
   }
 
   return (
-    <div
-      className="
-      min-h-screen
-      bg-gradient-to-br
-      from-white via-indigo-50 to-blue-100
-      dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
-      text-gray-900 dark:text-white
-      transition-colors duration-500
-      p-6"
-    >
+    <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
       <div className="mx-auto max-w-6xl flex items-center justify-between mb-8">
         <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">
           Rutinas Personalizadas
@@ -112,14 +120,8 @@ export default function RoutinesPage() {
 
       <div className="mx-auto max-w-6xl grid md:grid-cols-3 gap-6">
         {PERIODS.map(period => (
-          <div
-            key={period}
-            className="rounded-2xl overflow-hidden shadow-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 transition-colors duration-500"
-          >
-            <div className={`px-4 py-3 bg-gradient-to-r ${PERIOD_COLORS[period]} text-white font-semibold`}>
-              {period}
-            </div>
-
+          <div key={period} className="rounded-2xl overflow-hidden shadow-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 transition-colors duration-500">
+            <div className={`px-4 py-3 bg-gradient-to-r ${PERIOD_COLORS[period]} text-white font-semibold`}>{period}</div>
             <div className="p-4 space-y-4">
               {grouped[period].length === 0 && (
                 <p className="text-neutral-600 dark:text-neutral-400 text-sm italic">
@@ -128,10 +130,7 @@ export default function RoutinesPage() {
               )}
 
               {grouped[period].map(r => (
-                <div
-                  key={r.id}
-                  className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md transition-all duration-300 hover:scale-[1.02]"
-                >
+                <div key={r.id} className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md transition-all duration-300 hover:scale-[1.02]">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold text-lg">{r.title}</h3>
                     <div className="flex items-center gap-1">
@@ -194,9 +193,7 @@ export default function RoutinesPage() {
         ))}
       </div>
 
-      {modalOpen && (
-        <RoutineModal onClose={closeModal} onSave={saveRoutine} editing={editing} />
-      )}
+      {modalOpen && <RoutineModal onClose={closeModal} onSave={saveRoutine} editing={editing} />}
     </div>
   )
 }

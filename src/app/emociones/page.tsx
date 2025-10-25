@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { db } from '../lib/firebase'
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore'
+import { db, auth } from '../lib/firebase'
+import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore'
 import { format, subDays } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import {
@@ -36,24 +36,32 @@ export default function MoodDashboard() {
   const [selected, setSelected] = useState<string | null>(null)
   const [data, setData] = useState<any[]>([])
   const router = useRouter()
-  const moodsRef = collection(db, 'moods')
 
-  // Guardar emoción
+  const uid = auth.currentUser?.uid
+  if (!uid) {
+    // Opcional: redirigir si no hay usuario
+    router.push('/login')
+    return null
+  }
+
+  // Guardar emoción en la subcolección del usuario
   const saveMood = async () => {
-    if (!selected) return
+    if (!selected || !uid) return
     const today = format(new Date(), 'yyyy-MM-dd')
-    await addDoc(moodsRef, { mood: selected, date: today })
+    const moodsRef = collection(db, 'users', uid, 'moods')
+    await addDoc(moodsRef, { mood: selected, date: today, createdAt: new Date() })
     setSelected(null)
     fetchData()
   }
 
-  // Consultar datos
+  // Consultar datos de los últimos 7 días
   const fetchData = async () => {
+    if (!uid) return
+    const moodsRef = collection(db, 'users', uid, 'moods')
     const last7Days = Array.from({ length: 7 }).map((_, i) =>
       format(subDays(new Date(), i), 'yyyy-MM-dd')
     )
-
-    const q = query(moodsRef, where('date', '>=', last7Days[6]))
+    const q = query(moodsRef, where('date', '>=', last7Days[6]), orderBy('date', 'asc'))
     const snapshot = await getDocs(q)
 
     const moodData = last7Days
@@ -71,30 +79,28 @@ export default function MoodDashboard() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [uid])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
-  
-  {/* Header */}
-  <div className="flex justify-between items-center p-6">
-    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-     Mood Tracker
-    </h1>
-    <button
-      onClick={() => router.push('/')}
-      className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
-    >
-      Salir
-    </button>
-  </div>
+      {/* Header */}
+      <div className="flex justify-between items-center p-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          Mood Tracker
+        </h1>
+        <button
+          onClick={() => router.push('/')}
+          className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+        >
+          Salir
+        </button>
+      </div>
 
-  {/* Bloques con fondo adaptado */}
-  <div className="p-6 max-w-3xl mx-auto rounded-2xl shadow-lg 
-    bg-white/70 dark:bg-gray-800/70 backdrop-blur-md">
-    <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 text-center">
-      ¿Cómo te sientes hoy?
-    </h2>
+      {/* Selección de emoción */}
+      <div className="p-6 max-w-3xl mx-auto rounded-2xl shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-md">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 text-center">
+          ¿Cómo te sientes hoy?
+        </h2>
         <div className="flex justify-center gap-4 mb-4">
           {emociones.map((emo) => (
             <button

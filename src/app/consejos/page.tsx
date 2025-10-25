@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { collection, addDoc, getDocs } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { db, auth } from '../lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 
@@ -15,33 +16,54 @@ const estados = ['motivado', 'estresado', 'triste', 'desenfocado', 'feliz', 'ans
 
 export default function Consejos() {
   const router = useRouter()
-
+  const [user, setUser] = useState<any>(null)
   const [consejos, setConsejos] = useState<Consejo[]>([])
   const [nuevoConsejo, setNuevoConsejo] = useState('')
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('motivado')
   const [filtro, setFiltro] = useState('motivado')
   const [loading, setLoading] = useState(false)
 
+  // 🔹 Detectar si hay usuario logueado
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
+      } else {
+        router.push('/login') // redirige si no hay usuario
+      }
+    })
+    return () => unsubscribe()
+  }, [router])
+
+  // 🔹 Cargar consejos del usuario actual
   useEffect(() => {
     const fetchConsejos = async () => {
-      const snapshot = await getDocs(collection(db, 'consejos'))
+      if (!user) return
+      const snapshot = await getDocs(collection(db, 'users', user.uid, 'consejos'))
       const data = snapshot.docs.map(doc => ({
         texto: doc.data().texto,
         estado: doc.data().estado || 'motivado',
       }))
       setConsejos(data)
     }
-    fetchConsejos()
-  }, [])
 
+    fetchConsejos()
+  }, [user])
+
+  // 🔹 Agregar nuevo consejo
   const handleAgregar = async () => {
+    if (!user) return alert('Debes iniciar sesión primero.')
     if (nuevoConsejo.trim() === '') return
+
     setLoading(true)
     try {
-      await addDoc(collection(db, 'consejos'), {
+      const ref = collection(db, 'users', user.uid, 'consejos')
+      await addDoc(ref, {
         texto: nuevoConsejo,
         estado: estadoSeleccionado,
+        fecha: new Date(),
       })
+
       setConsejos([...consejos, { texto: nuevoConsejo, estado: estadoSeleccionado }])
       setNuevoConsejo('')
     } catch (err) {
@@ -52,17 +74,11 @@ export default function Consejos() {
 
   const consejosFiltrados = consejos.filter(c => c.estado === filtro)
 
-  // Función para salir / ir a home o página que desees
-  function handleSalir() {
-    router.push('/') // Cambia la ruta si quieres otro destino
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white p-6">
-      
+    <div className="min-h-screen bg-[#ffffff] text-gray-900 p-6">
       {/* Botón Salir */}
       <button
-        onClick={() => router.push('/')} 
+        onClick={() => router.push('/')}
         className="flex items-center mb-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition"
       >
         <LogOut className="w-5 h-5 mr-2" />
@@ -72,19 +88,19 @@ export default function Consejos() {
       <h1 className="text-3xl font-bold mb-6 text-center">🌟 Consejos por Estado de Ánimo</h1>
 
       {/* Formulario */}
-      <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+      <div className="max-w-xl mx-auto bg-[#f8f5f0] p-6 rounded-lg shadow-lg mb-8">
         <h2 className="text-xl font-semibold mb-4">Agregar Consejo</h2>
         <textarea
           value={nuevoConsejo}
           onChange={(e) => setNuevoConsejo(e.target.value)}
-          className="w-full p-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+          className="w-full p-3 rounded bg-white text-gray-900 resize-none"
           placeholder="Escribe un consejo..."
           rows={3}
         />
         <select
           value={estadoSeleccionado}
           onChange={(e) => setEstadoSeleccionado(e.target.value)}
-          className="mt-4 w-full p-2 bg-gray-100 dark:bg-gray-700 rounded"
+          className="mt-4 w-full p-2 bg-white rounded"
         >
           {estados.map((estado) => (
             <option key={estado} value={estado}>
@@ -107,7 +123,7 @@ export default function Consejos() {
         <select
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
-          className="w-full p-2 rounded bg-white dark:bg-gray-700"
+          className="w-full p-2 rounded bg-white"
         >
           {estados.map((estado) => (
             <option key={estado} value={estado}>
@@ -121,12 +137,12 @@ export default function Consejos() {
       <div className="max-w-xl mx-auto space-y-3">
         {consejosFiltrados.length > 0 ? (
           consejosFiltrados.map((consejo, i) => (
-            <div key={i} className="bg-white dark:bg-gray-700 p-4 rounded shadow">
+            <div key={i} className="bg-white p-4 rounded shadow">
               {consejo.texto}
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-600 dark:text-gray-400">
+          <p className="text-center text-gray-600">
             No hay consejos para este estado 😔
           </p>
         )}
@@ -134,8 +150,3 @@ export default function Consejos() {
     </div>
   )
 }
-
-
-
-
-

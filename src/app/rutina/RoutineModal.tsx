@@ -5,23 +5,22 @@ import { X } from 'lucide-react'
 
 type Periodo = 'Mañana' | 'Tarde' | 'Noche'
 
-type TaskItem = {
+export type TaskItem = {
   id: string
   text: string
   done: boolean
 }
 
-type Routine = {
+export type Routine = {
   id?: string
   title: string
   tasks: TaskItem[]
   period: Periodo
-  createdAt?: number
 }
 
 type RoutineModalProps = {
   onClose: () => void
-  onSave: (routine: Omit<Routine, 'id' | 'createdAt'>) => void
+  onSave: (routine: Omit<Routine, 'id'>) => void
   editing?: Routine | null
 }
 
@@ -56,7 +55,8 @@ export default function RoutineModal({ onClose, onSave, editing }: RoutineModalP
 
   const handleSubmit = () => {
     if (!title.trim()) return alert('El título es obligatorio')
-    onSave({ title, tasks, period })
+    if (tasks.some(t => !t.text.trim())) return alert('Todas las tareas deben tener texto')
+    onSave({ title: title.trim(), tasks, period })
     onClose()
   }
 
@@ -116,6 +116,9 @@ export default function RoutineModal({ onClose, onSave, editing }: RoutineModalP
               </button>
             </div>
           ))}
+          {tasks.length === 0 && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 italic">No hay tareas aún.</p>
+          )}
         </div>
 
         <button

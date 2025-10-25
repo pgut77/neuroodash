@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, Book, LogOut } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db, auth } from '../lib/firebase'
 import {
   collection,
   addDoc,
@@ -11,6 +11,7 @@ import {
   doc,
 } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
+import { onAuthStateChanged } from 'firebase/auth'
 
 interface Subject {
   id: string
@@ -22,6 +23,7 @@ interface Subject {
 }
 
 export default function GestorMaterias() {
+  const [user, setUser] = useState<any>(null)
   const [materias, setMaterias] = useState<Subject[]>([])
   const [form, setForm] = useState({
     name: '',
@@ -36,57 +38,72 @@ export default function GestorMaterias() {
 
   const router = useRouter()
 
-  const handleSalir = () => {
-    router.push('/')
-  }
+  // 🔹 Detectar usuario logueado
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
+      } else {
+        router.push('/login')
+      }
+    })
+    return () => unsubscribe()
+  }, [router])
 
-  // Reloj
+  // 🔹 Reloj
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
       setHora(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
-      setFecha(now.toLocaleDateString('es-MX', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }))
+      setFecha(
+        now.toLocaleDateString('es-MX', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      )
     }
-
     updateTime()
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
 
-  // Cargar materias
+  // 🔹 Cargar materias del usuario
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'materias'), (snap) => {
+    if (!user) return
+    const ref = collection(db, 'users', user.uid, 'materias')
+    const unsub = onSnapshot(ref, (snap) => {
       const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Subject))
       setMaterias(data)
     })
     return () => unsub()
-  }, [])
+  }, [user])
 
+  const handleSalir = () => router.push('/')
+
+  // 🔹 Agregar nueva materia
   const handleAdd = async () => {
+    if (!user) return alert('Debes iniciar sesión')
     if (!form.name || !form.teacher || !form.day || !form.time) return
     setLoading(true)
-    await addDoc(collection(db, 'materias'), form)
-    setForm({
-      name: '',
-      teacher: '',
-      color: '#6b7280',
-      day: '',
-      time: '',
-    })
+    try {
+      const ref = collection(db, 'users', user.uid, 'materias')
+      await addDoc(ref, form)
+      setForm({ name: '', teacher: '', color: '#6b7280', day: '', time: '' })
+    } catch (err) {
+      console.error(err)
+    }
     setLoading(false)
   }
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'materias', id))
+    if (!user) return
+    await deleteDoc(doc(db, 'users', user.uid, 'materias', id))
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 p-6 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 p-6">
 
       {/* Encabezado */}
       <div className="flex justify-between items-center mb-6">
@@ -104,42 +121,39 @@ export default function GestorMaterias() {
       </div>
 
       {/* Fecha y hora */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 rounded-lg px-4 py-3 shadow-sm transition-colors duration-500">
-        <div className="text-md font-medium text-gray-700 dark:text-gray-300">{fecha}</div>
-        <div className="text-xl font-bold text-gray-800 dark:text-gray-200">{hora}</div>
+      <div className="flex items-center justify-between bg-gradient-to-r from-indigo-100 to-purple-100 rounded-lg px-4 py-3 shadow-sm mb-5">
+        <div className="text-md font-medium">{fecha}</div>
+        <div className="text-xl font-bold">{hora}</div>
       </div>
 
       {/* Formulario */}
-      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 rounded-xl shadow-md mt-5 transition-colors duration-500">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
-          Agregar nueva materia
-        </h2>
-
+      <div className="bg-gray-50 p-5 rounded-xl shadow-md mb-6">
+        <h2 className="text-xl font-semibold mb-4">Agregar nueva materia</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
             placeholder="Nombre de la materia"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
+            className="p-2 rounded border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="text"
             placeholder="Nombre del profesor"
             value={form.teacher}
             onChange={(e) => setForm({ ...form, teacher: e.target.value })}
-            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
+            className="p-2 rounded border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="color"
             value={form.color}
             onChange={(e) => setForm({ ...form, color: e.target.value })}
-            className="w-full h-10 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
+            className="w-full h-10 rounded border cursor-pointer bg-white"
           />
           <select
             value={form.day}
             onChange={(e) => setForm({ ...form, day: e.target.value })}
-            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
+            className="p-2 rounded border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400"
           >
             <option value="">Día de la semana</option>
             <option value="Lunes">Lunes</option>
@@ -154,29 +168,25 @@ export default function GestorMaterias() {
             type="time"
             value={form.time}
             onChange={(e) => setForm({ ...form, time: e.target.value })}
-            className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-400 transition"
+            className="p-2 rounded border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400"
           />
         </div>
-
         <button
           onClick={handleAdd}
           disabled={loading}
-          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition"
+          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white"
         >
           <Plus className="inline-block mr-2" /> Agregar
         </button>
       </div>
 
       {/* Lista de materias */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {materias.map((mat) => (
           <div
             key={mat.id}
-            className="rounded-xl shadow-md p-4 relative text-white transition"
-            style={{
-              backgroundColor: mat.color,
-              filter: 'brightness(0.95)',
-            }}
+            className="rounded-xl shadow-md p-4 relative text-white"
+            style={{ backgroundColor: mat.color, filter: 'brightness(0.95)' }}
           >
             <h3 className="text-xl font-bold mb-1">{mat.name}</h3>
             <p className="text-sm">Profesor: {mat.teacher}</p>
@@ -194,4 +204,3 @@ export default function GestorMaterias() {
     </div>
   )
 }
-

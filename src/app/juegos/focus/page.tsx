@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { db } from '../../lib/firebase'
+import { auth, db } from '../../lib/firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { useRouter } from "next/navigation"
 
@@ -35,21 +35,58 @@ export default function CalculoRapido() {
   const [gameOver, setGameOver] = useState(false)
   const [highScore, setHighScore] = useState<number | null>(null)
 
-  const router = useRouter();
+  const router = useRouter()
 
-  const handleSalir = () => {
-    router.push("/juegos") // redirige al inicio
+  const handleSalir = () => router.push("/juegos")
+
+  const startGame = () => {
+    setScore(0)
+    setProblem(generateProblem())
+    setTime(5)
+    setGameOver(false)
+  }
+
+  const saveHighScore = async (score: number) => {
+    const user = auth.currentUser
+    if (!user) return
+    const uid = user.uid
+
+    try {
+      const ref = doc(db, 'users', uid, 'scores', 'calculo')
+      const snap = await getDoc(ref)
+      const currentHigh = snap.exists() ? snap.data().score || 0 : 0
+      if (score > currentHigh) {
+        await setDoc(ref, { score }, { merge: true })
+        setHighScore(score)
+      }
+    } catch (err) {
+      console.error('Error guardando puntaje:', err)
+    }
+  }
+
+  const handleAnswer = (val: number) => {
+    if (gameOver) return
+    if (val === problem.answer) {
+      setScore(score + 1)
+      setProblem(generateProblem())
+      setTime(5)
+    } else {
+      setGameOver(true)
+      saveHighScore(score)
+    }
   }
 
   useEffect(() => {
     const fetchHighScore = async () => {
-      const ref = doc(db, 'scores', 'calculo')
+      const user = auth.currentUser
+      if (!user) return
+      const uid = user.uid
+      const ref = doc(db, 'users', uid, 'scores', 'calculo')
       const snap = await getDoc(ref)
-      if (snap.exists()) {
-        setHighScore(snap.data().score)
-      }
+      if (snap.exists()) setHighScore(snap.data().score)
     }
     fetchHighScore()
+    startGame()
   }, [])
 
   useEffect(() => {
@@ -58,6 +95,7 @@ export default function CalculoRapido() {
       setTime((prev) => {
         if (prev === 1) {
           setGameOver(true)
+          saveHighScore(score)
           return 0
         }
         return prev - 1
@@ -66,32 +104,7 @@ export default function CalculoRapido() {
     return () => clearInterval(timer)
   }, [gameOver])
 
-  useEffect(() => {
-    const updateHighScore = async () => {
-      if (gameOver && (highScore === null || score > highScore)) {
-        await setDoc(doc(db, 'scores', 'calculo'), { score })
-        setHighScore(score)
-      }
-    }
-    updateHighScore()
-  }, [gameOver])
-
-  const handleAnswer = (val: number) => {
-    if (val === problem.answer) {
-      setScore(score + 1)
-      setProblem(generateProblem())
-      setTime(5)
-    } else {
-      setGameOver(true)
-    }
-  }
-
-  const restart = () => {
-    setScore(0)
-    setGameOver(false)
-    setProblem(generateProblem())
-    setTime(5)
-  }
+  const restart = () => startGame()
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col items-center justify-center p-6">
@@ -154,5 +167,3 @@ export default function CalculoRapido() {
     </div>
   )
 }
-
-

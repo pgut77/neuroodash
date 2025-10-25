@@ -1,8 +1,8 @@
 'use client'
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from 'react'
-import { db } from '../../lib/firebase'
+import { auth, db } from '../../lib/firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 const colores = [
@@ -38,58 +38,35 @@ export default function ColorFinder() {
   const [highScore, setHighScore] = useState<number | null>(null)
   const [gameOver, setGameOver] = useState(false)
 
-  const router = useRouter();
+  const router = useRouter()
 
-  const handleSalir = () => {
-    router.push("/");
-  };
-
-  // Cargar mejor puntaje desde Firebase
-  useEffect(() => {
-    const fetchHighScore = async () => {
-      try {
-        const ref = doc(db, 'scores', 'color')
-        const snap = await getDoc(ref)
-        if (snap.exists()) {
-          const data = snap.data()
-          if (typeof data.score === "number") {
-            setHighScore(data.score)
-          }
-        }
-      } catch (error) {
-        console.error("Error al obtener el puntaje:", error)
-      }
-    }
-    fetchHighScore()
-  }, [])
-
-  // Iniciar el juego
-  useEffect(() => {
-    startGame()
-  }, [])
-
-  // Actualizar el mejor puntaje
-  useEffect(() => {
-    const updateHighScore = async () => {
-      if (gameOver && (highScore === null || score > highScore)) {
-        try {
-          await setDoc(doc(db, 'scores', 'color'), { score }, { merge: true })
-          setHighScore(score)
-        } catch (error) {
-          console.error("Error al guardar el puntaje:", error)
-        }
-      }
-    }
-    updateHighScore()
-  }, [gameOver])
+  const handleSalir = () => router.push("/juegos")
 
   const startGame = () => {
     const nuevos = generateColors(6)
     const objetivo = nuevos[Math.floor(Math.random() * nuevos.length)]
     setColors(nuevos)
     setTarget(objetivo)
-    setGameOver(false)
     setScore(0)
+    setGameOver(false)
+  }
+
+  const saveHighScore = async (score: number) => {
+    const user = auth.currentUser
+    if (!user) return
+    const uid = user.uid
+
+    try {
+      const ref = doc(db, 'users', uid, 'scores', 'color')
+      const snap = await getDoc(ref)
+      const currentHigh = snap.exists() ? snap.data().score || 0 : 0
+      if (score > currentHigh) {
+        await setDoc(ref, { score }, { merge: true })
+        setHighScore(score)
+      }
+    } catch (err) {
+      console.error('Error guardando puntaje:', err)
+    }
   }
 
   const handleChoice = (color: { nombre: string, codigo: string }) => {
@@ -102,15 +79,28 @@ export default function ColorFinder() {
       setTarget(nuevoObjetivo)
     } else {
       setGameOver(true)
+      saveHighScore(score)
     }
   }
 
+  useEffect(() => {
+    // Cargar high score del usuario
+    const fetchHighScore = async () => {
+      const user = auth.currentUser
+      if (!user) return
+      const uid = user.uid
+      const ref = doc(db, 'users', uid, 'scores', 'color')
+      const snap = await getDoc(ref)
+      if (snap.exists()) setHighScore(snap.data().score)
+    }
+    fetchHighScore()
+    startGame()
+  }, [])
+
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6">
-
-      {/* Botón salir flotante */}
       <button
-        onClick={() => router.push('/juegos')} 
+        onClick={handleSalir} 
         className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-full shadow-lg transition flex items-center gap-2"
       >
         ⏻ Salir
